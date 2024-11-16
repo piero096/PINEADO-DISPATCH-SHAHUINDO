@@ -36,7 +36,6 @@ def iniciar_ping():
                 output_text.insert(tk.END, line)
                 output_text.yview(tk.END) 
 
-                # Buscar tiempo en la línea de salida (formato tiempo=NNms)
                 match = re.search(r"tiempo[=<](\d+)ms", line)
                 if match:
                     tiempo = int(match.group(1))
@@ -47,7 +46,6 @@ def iniciar_ping():
                 elif "Tiempo de espera agotado" in line or "Request timed out" in line:
                     perdidos += 1
 
-            # Calcular porcentajes
             total_paquetes = correctos + perdidos
             if total_paquetes > 0:
                 porcentaje_correctos = (correctos / total_paquetes) * 100
