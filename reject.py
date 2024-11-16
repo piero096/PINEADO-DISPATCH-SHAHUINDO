@@ -2,6 +2,7 @@ import subprocess
 import tkinter as tk
 from tkinter import messagebox
 import threading
+import re
 
 proceso_ping = None
 
@@ -35,11 +36,18 @@ def iniciar_ping():
                 output_text.insert(tk.END, line)
                 output_text.yview(tk.END) 
 
-                if "TTL" in line:
-                    correctos += 1
-                elif "Tiempo de espera agotado para esta solicitud." in line:
+                # Buscar tiempo en la línea de salida (formato tiempo=NNms)
+                match = re.search(r"tiempo[=<](\d+)ms", line)
+                if match:
+                    tiempo = int(match.group(1))
+                    if tiempo < 50:
+                        correctos += 1
+                    else:
+                        perdidos += 1
+                elif "Tiempo de espera agotado" in line or "Request timed out" in line:
                     perdidos += 1
 
+            # Calcular porcentajes
             total_paquetes = correctos + perdidos
             if total_paquetes > 0:
                 porcentaje_correctos = (correctos / total_paquetes) * 100
@@ -49,15 +57,15 @@ def iniciar_ping():
                 porcentaje_perdidos = 0
 
             output_text.insert(tk.END, "\nResumen del ping:\n")
-            output_text.insert(tk.END, f"Paquetes correctos: {correctos}\n")
-            output_text.insert(tk.END, f"Paquetes perdidos: {perdidos}\n")
-            output_text.insert(tk.END, f"Porcentaje de paquetes correctos: {porcentaje_correctos:.2f}%\n")
-            output_text.insert(tk.END, f"Porcentaje de paquetes perdidos: {porcentaje_perdidos:.2f}%\n")
+            output_text.insert(tk.END, f"Paquetes con tiempo < 50ms: {correctos}\n")
+            output_text.insert(tk.END, f"Paquetes con tiempo >= 50ms o sin respuesta: {perdidos}\n")
+            output_text.insert(tk.END, f"Porcentaje de tiempos < 50ms: {porcentaje_correctos:.2f}%\n")
+            output_text.insert(tk.END, f"Porcentaje de tiempos >= 50ms o sin respuesta: {porcentaje_perdidos:.2f}%\n")
 
         except KeyboardInterrupt:
             output_text.insert(tk.END, "\nProceso de ping detenido.")
         finally:
-            ping_process = None 
+            proceso_ping = None 
 
     threading.Thread(target=ping, daemon=True).start()
 
