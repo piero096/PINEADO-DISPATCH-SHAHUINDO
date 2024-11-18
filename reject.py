@@ -25,7 +25,13 @@ def iniciar_ping():
         nonlocal correctos, perdidos
 
         global proceso_ping 
-        proceso_ping = subprocess.Popen(["ping", ip, "-t"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        proceso_ping = subprocess.Popen(
+            ["ping", ip, "-t"], 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE, 
+            text=True, 
+            creationflags=subprocess.CREATE_NO_WINDOW  # Ocultar ventana CMD
+        )
 
         try:
             while True:
