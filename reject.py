@@ -3,11 +3,13 @@ import tkinter as tk
 from tkinter import messagebox
 import threading
 import re
+from datetime import datetime
 
 proceso_ping = None
+hora_inicio = None
 
 def iniciar_ping():
-    global proceso_ping  
+    global proceso_ping, hora_inicio
 
     ip = entry_ip.get()
 
@@ -17,6 +19,7 @@ def iniciar_ping():
 
     correctos = 0
     perdidos = 0
+    hora_inicio = datetime.now()
 
     output_text.delete(1.0, tk.END)
     output_text.insert(tk.END, f"Iniciando ping a {ip}...\n")
@@ -24,13 +27,13 @@ def iniciar_ping():
     def ping():
         nonlocal correctos, perdidos
 
-        global proceso_ping 
+        global proceso_ping
         proceso_ping = subprocess.Popen(
             ["ping", ip, "-t"], 
             stdout=subprocess.PIPE, 
             stderr=subprocess.PIPE, 
             text=True, 
-            creationflags=subprocess.CREATE_NO_WINDOW  # Ocultar ventana CMD
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
 
         try:
@@ -40,7 +43,7 @@ def iniciar_ping():
                     break
 
                 output_text.insert(tk.END, line)
-                output_text.yview(tk.END) 
+                output_text.yview(tk.END)
 
                 match = re.search(r"tiempo[=<](\d+)ms", line)
                 if match:
@@ -74,11 +77,17 @@ def iniciar_ping():
     threading.Thread(target=ping, daemon=True).start()
 
 def detener_ping():
-    global proceso_ping  
+    global proceso_ping, hora_inicio
     if proceso_ping is not None:
-        proceso_ping.terminate() 
+        proceso_ping.terminate()
+        hora_fin = datetime.now()
+        duracion = hora_fin - hora_inicio
         output_text.insert(tk.END, "\nProceso de ping detenido por el usuario.\n")
-        proceso_ping = None 
+        output_text.insert(tk.END, "\nResultados finales:\n")
+        output_text.insert(tk.END, f"Fecha y hora de inicio: {hora_inicio.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        output_text.insert(tk.END, f"Fecha y hora de fin: {hora_fin.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        output_text.insert(tk.END, f"Duración total del ping: {duracion}\n")
+        proceso_ping = None
     else:
         output_text.insert(tk.END, "\nNo hay un ping en curso para detener.\n")
 
