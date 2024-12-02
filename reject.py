@@ -166,8 +166,9 @@ class PingApp:
 
 
 def limpiar_log():
-    log_area.delete(1.0, tk.END)
-    promedios_area.delete(1.0, tk.END)
+    log_area.delete(1.0, tk.END)  # Limpia el área de texto de log
+    promedios_area.delete(1.0, tk.END)  # Limpia el área de texto de promedios
+    results.clear()
 
 
 def calcular_promedio():
@@ -213,11 +214,9 @@ def generar_grafico():
     promedio_correctos = sum(correctos) / len(correctos) if correctos else 0
     promedio_perdidos = sum(perdidos) / len(perdidos) if perdidos else 0
 
-    # Crear la ventana para los gráficos
     new_window = tk.Toplevel(ventana_principal)
     new_window.title("Gráficos de Resultados de Ping")
 
-    # Crear un Canvas para permitir el desplazamiento
     canvas_frame = tk.Frame(new_window)
     canvas_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -228,25 +227,20 @@ def generar_grafico():
     scrollbar.pack(side="right", fill="y")
     canvas.pack(side="left", fill=tk.BOTH, expand=True)
 
-    # Crear un frame dentro del canvas para los gráficos
     graphics_frame = tk.Frame(canvas)
     canvas.create_window((0, 0), window=graphics_frame, anchor="nw")
 
-    # Crear el primer gráfico (Resultados de Ping por IP)
     fig1, ax1 = plt.subplots(figsize=(10, 6))
 
     bar_width = 0.35
     index = range(len(ips))
 
-    # Colores personalizados para las barras
     color_correctos = '#4CAF50'  # Verde
     color_perdidos = '#F44336'  # Rojo
 
-    # Crear las barras
     bar1 = ax1.bar(index, correctos, bar_width, label='% < 50ms', color=color_correctos, edgecolor='black', hatch='//')
     bar2 = ax1.bar([i + bar_width for i in index], perdidos, bar_width, label='% >= 50ms o sin respuesta', color=color_perdidos, edgecolor='black', hatch='\\')
 
-    # Mostrar los valores encima de las barras
     def add_labels(bars, data):
         for bar, value in zip(bars, data):
             height = bar.get_height()
@@ -255,7 +249,6 @@ def generar_grafico():
     add_labels(bar1, correctos)
     add_labels(bar2, perdidos)
 
-    # Establecer etiquetas y título
     ax1.set_xlabel('Equipos', fontsize=12)
     ax1.set_ylabel('Porcentaje', fontsize=12)
     ax1.set_title('Resultados de Ping por IP', fontsize=14, fontweight='bold')
@@ -263,18 +256,14 @@ def generar_grafico():
     ax1.set_xticklabels(nombres, rotation=45, ha='right', fontsize=10)
     ax1.legend(title="Resultados", title_fontsize='13', fontsize=11)
 
-    # Mejorar el diseño con una cuadrícula
     ax1.grid(True, linestyle='--', alpha=0.7)
 
-    # Mejorar el estilo de los ejes
     ax1.tick_params(axis='both', which='major', labelsize=10)
 
-    # Crear el canvas para el gráfico de resultados y empaquetarlo
     canvas1 = FigureCanvasTkAgg(fig1, master=graphics_frame)
     canvas1.draw()
     canvas1.get_tk_widget().pack(pady=10)
 
-    # Crear el gráfico de promedios en la misma ventana
     fig2, ax2 = plt.subplots(figsize=(10, 6))
 
     # Datos para el gráfico de promedios
@@ -286,7 +275,6 @@ def generar_grafico():
     bar1_avg = ax2.bar(promedios_ips, promedios_correctos, color=color_correctos, edgecolor='black', label='% < 50ms Promedio', hatch='//')
     bar2_avg = ax2.bar([x + bar_width for x in range(len(promedios_ips))], promedios_perdidos, color=color_perdidos, edgecolor='black', label='% >= 50ms o sin respuesta Promedio', hatch='\\')
 
-    # Mostrar los valores encima de las barras
     def add_labels_promedio(bars, data):
         for bar, value in zip(bars, data):
             height = bar.get_height()
@@ -295,7 +283,6 @@ def generar_grafico():
     add_labels_promedio(bar1_avg, promedios_correctos)
     add_labels_promedio(bar2_avg, promedios_perdidos)
 
-    # Establecer etiquetas y título
     ax2.set_xlabel('Promedio', fontsize=12)
     ax2.set_ylabel('Porcentaje', fontsize=12)
     ax2.set_title('Promedio de Resultados de Ping', fontsize=14, fontweight='bold')
@@ -303,22 +290,17 @@ def generar_grafico():
     ax2.set_xticklabels(promedios_ips, rotation=45, ha='right', fontsize=10)
     ax2.legend(title="Promedios", title_fontsize='13', fontsize=11)
 
-    # Mejorar el diseño con una cuadrícula
     ax2.grid(True, linestyle='--', alpha=0.7)
 
-    # Mejorar el estilo de los ejes
     ax2.tick_params(axis='both', which='major', labelsize=10)
 
-    # Crear el canvas para el gráfico de promedios y empaquetarlo
     canvas2 = FigureCanvasTkAgg(fig2, master=graphics_frame)
     canvas2.draw()
     canvas2.get_tk_widget().pack(pady=10)
 
-    # Actualizar el área de desplazamiento para que se ajuste al contenido
     graphics_frame.update_idletasks()
     canvas.config(scrollregion=canvas.bbox("all"))
 
-    # Asegurar que no se modifica la ventana principal
     new_window.protocol("WM_DELETE_WINDOW", lambda: new_window.destroy())
 
 
@@ -350,4 +332,4 @@ btn_limpiar.pack(pady=10)
 btn_generar_grafico = tk.Button(ventana_principal, text="Generar Gráfico de Resultados", command=generar_grafico)
 btn_generar_grafico.pack(pady=10)
 
-ventana_principal.mainloop()#original
+ventana_principal.mainloop()
