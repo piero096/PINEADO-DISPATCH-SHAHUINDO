@@ -143,14 +143,14 @@ class PingApp:
 
             self.output_text.insert(tk.END, f"\nDesde: {self.hora_inicio.strftime('%Y-%m-%d %H:%M:%S')}\n")
             self.output_text.insert(tk.END, f"Hasta: {hora_fin.strftime('%Y-%m-%d %H:%M:%S')}\n")
-            self.output_text.insert(tk.END, f"Duración total del ping: {tiempo}\n")
+            self.output_text.insert(tk.END, f"Duración total: {tiempo}\n")
             self.output_text.insert(tk.END, f"% < 50ms: {porcentaje_correctos:.2f}%\n")
             self.output_text.insert(tk.END, f"% >= 50ms o sin respuesta: {porcentaje_perdidos:.2f}%\n")
 
             self.log_area.insert(tk.END, f"--- Resultados de Ping para IP: {self.ip} ({nombre_equipo}) ---\n")
             self.log_area.insert(tk.END, f"Desde: {self.hora_inicio.strftime('%Y-%m-%d %H:%M:%S')}\n")
             self.log_area.insert(tk.END, f"Hasta: {hora_fin.strftime('%Y-%m-%d %H:%M:%S')}\n")
-            self.log_area.insert(tk.END, f"Duración total del ping: {tiempo}\n\n")
+            self.log_area.insert(tk.END, f"Duración total: {tiempo}\n\n")
             self.log_area.insert(tk.END, f"% < 50ms: {porcentaje_correctos:.2f}%\n")
             self.log_area.insert(tk.END, f"% >= 50ms o sin respuesta: {porcentaje_perdidos:.2f}%\n\n")
 
