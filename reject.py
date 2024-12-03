@@ -36,10 +36,9 @@ class PingApp:
         self.label.pack(pady=10)
 
         self.entry_ip = tk.Entry(master, width=30)
-        self.entry_ip.insert(0, "10.72.14.")  # Establecer el valor predeterminado
+        self.entry_ip.insert(0, "10.72.14.")
         self.entry_ip.pack(pady=10)
 
-        # Etiqueta para mostrar el nombre de la excavadora
         self.label_nombre_equipo = tk.Label(master, text="Equipo: Desconocido")
         self.label_nombre_equipo.pack(pady=10)
 
@@ -52,11 +51,9 @@ class PingApp:
         self.output_text = tk.Text(master, height=15, width=70)
         self.output_text.pack(pady=10)
 
-        # Interceptar el cierre de la ventana
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def on_closing(self):
-        # Al cerrar la ventana principal, detenemos el ping si está en curso
         if self.proceso_ping is not None:
             self.proceso_ping.terminate()
             self.output_text.insert(tk.END, "\nPing detenido al cerrar la ventana.\n")
@@ -74,7 +71,6 @@ class PingApp:
 
         nombre_equipo = self.nombres_equipos.get(self.ip, "Desconocido")
 
-        # Actualizar el texto con el nombre de la excavadora
         self.label_nombre_equipo.config(text=f"Equipo: {nombre_equipo}")
 
         self.correctos = 0
@@ -88,7 +84,7 @@ class PingApp:
 
         def ping():
             creation_flags = 0
-            if os.name == 'nt':  # Windows
+            if os.name == 'nt': 
                 creation_flags = subprocess.CREATE_NO_WINDOW
 
             self.proceso_ping = subprocess.Popen(
@@ -128,6 +124,11 @@ class PingApp:
             hora_fin = datetime.now()
             duracion = hora_fin - self.hora_inicio
 
+
+            horas, resto = divmod(duracion.total_seconds(), 3600) 
+            minutos, segundos = divmod(resto, 60) 
+            tiempo = f"{int(horas)}h, {int(minutos)}m, {int(segundos)}s"
+
             nombre_equipo = self.nombres_equipos.get(self.ip, "Desconocido")
 
             self.output_text.insert(tk.END, "\nProceso de ping detenido por el usuario.\n")
@@ -142,12 +143,14 @@ class PingApp:
 
             self.output_text.insert(tk.END, f"\nDesde: {self.hora_inicio.strftime('%Y-%m-%d %H:%M:%S')}\n")
             self.output_text.insert(tk.END, f"Hasta: {hora_fin.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            self.output_text.insert(tk.END, f"Duración total del ping: {tiempo}\n")
             self.output_text.insert(tk.END, f"% < 50ms: {porcentaje_correctos:.2f}%\n")
             self.output_text.insert(tk.END, f"% >= 50ms o sin respuesta: {porcentaje_perdidos:.2f}%\n")
 
             self.log_area.insert(tk.END, f"--- Resultados de Ping para IP: {self.ip} ({nombre_equipo}) ---\n")
             self.log_area.insert(tk.END, f"Desde: {self.hora_inicio.strftime('%Y-%m-%d %H:%M:%S')}\n")
             self.log_area.insert(tk.END, f"Hasta: {hora_fin.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            self.log_area.insert(tk.END, f"Duración total del ping: {tiempo}\n\n")
             self.log_area.insert(tk.END, f"% < 50ms: {porcentaje_correctos:.2f}%\n")
             self.log_area.insert(tk.END, f"% >= 50ms o sin respuesta: {porcentaje_perdidos:.2f}%\n\n")
 
@@ -166,8 +169,8 @@ class PingApp:
 
 
 def limpiar_log():
-    log_area.delete(1.0, tk.END)  # Limpia el área de texto de log
-    promedios_area.delete(1.0, tk.END)  # Limpia el área de texto de promedios
+    log_area.delete(1.0, tk.END) 
+    promedios_area.delete(1.0, tk.END) 
     results.clear()
 
 
@@ -210,7 +213,6 @@ def generar_grafico():
     correctos = [result['correctos'] for result in results]
     perdidos = [result['perdidos'] for result in results]
 
-    # Calcular los promedios
     promedio_correctos = sum(correctos) / len(correctos) if correctos else 0
     promedio_perdidos = sum(perdidos) / len(perdidos) if perdidos else 0
 
@@ -266,12 +268,10 @@ def generar_grafico():
 
     fig2, ax2 = plt.subplots(figsize=(10, 6))
 
-    # Datos para el gráfico de promedios
     promedios_ips = ['Promedio']
     promedios_correctos = [promedio_correctos]
     promedios_perdidos = [promedio_perdidos]
 
-    # Crear las barras para el gráfico de promedios
     bar1_avg = ax2.bar(promedios_ips, promedios_correctos, color=color_correctos, edgecolor='black', label='% < 50ms Promedio', hatch='//')
     bar2_avg = ax2.bar([x + bar_width for x in range(len(promedios_ips))], promedios_perdidos, color=color_perdidos, edgecolor='black', label='% >= 50ms o sin respuesta Promedio', hatch='\\')
 
