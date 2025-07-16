@@ -107,12 +107,11 @@ class PingApp:
                     match = re.search(r"(time|tiempo)[=<](\d+)ms", line, re.IGNORECASE)
                     if match:
                         tiempo = int(match.group(2))
-                        if tiempo < 50:
+                        if tiempo < 100:
                             self.correctos += 1
                         else:
                             self.perdidos += 1
-                    elif "tiempo de espera agotado" in line.lower() or "request timed out" in line.lower():
-                        self.perdidos += 1
+                    
             finally:
                 self.proceso_ping = None
 
