@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import os
 
+RUTA_LOGS = os.path.join(os.path.expanduser("~"), "Documents", "PING_LOGS")
+os.makedirs(RUTA_LOGS, exist_ok=True)
+
 
 class PingApp:
     def __init__(self, master, log_area, promedios_area, results):
@@ -51,7 +54,50 @@ class PingApp:
         self.output_text = tk.Text(master, height=15, width=70)
         self.output_text.pack(pady=10)
 
+        # --- Gráfico en tiempo real ---
+        self.tiempos = []
+        self.max_points = 100
+
+        self.frame_grafico = tk.Frame(master)
+        self.frame_grafico.pack(pady=10)
+
+        self.fig, self.ax = plt.subplots(figsize=(6, 3))
+        self.linea, = self.ax.plot([], [], color='gray', linestyle='--', label="Tendencia")
+        self.scatter = None
+
+        self.ax.set_title("Ping en tiempo real")
+        self.ax.set_xlabel("Muestras")
+        self.ax.set_ylabel("Tiempo (ms)")
+        self.ax.grid(True)
+
+        self.canvas_grafico = FigureCanvasTkAgg(self.fig, master=self.frame_grafico)
+        self.canvas_grafico.draw()
+        self.canvas_grafico.get_tk_widget().pack()
+
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def actualizar_grafico(self, nuevo_tiempo):
+        self.tiempos.append(nuevo_tiempo)
+        if len(self.tiempos) > self.max_points:
+            self.tiempos.pop(0)
+
+        x = list(range(len(self.tiempos)))
+
+        # Línea de tendencia gris
+        self.linea.set_xdata(x)
+        self.linea.set_ydata(self.tiempos)
+
+        # Colorear puntos según valor
+        colores = ['green' if t < 50 else 'red' for t in self.tiempos]
+        if self.scatter:
+            self.scatter.remove()
+        self.scatter = self.ax.scatter(x, self.tiempos, c=colores)
+
+        # Ajustar límites dinámicos
+        self.ax.set_xlim(0, max(len(self.tiempos), self.max_points))
+        self.ax.set_ylim(0, max(self.tiempos) + 20 if self.tiempos else 100)
+
+        self.canvas_grafico.draw_idle()
 
     def on_closing(self):
         if self.proceso_ping is not None:
@@ -70,7 +116,6 @@ class PingApp:
             return
 
         nombre_equipo = self.nombres_equipos.get(self.ip, "Desconocido")
-
         self.label_nombre_equipo.config(text=f"Equipo: {nombre_equipo}")
 
         self.correctos = 0
@@ -84,7 +129,7 @@ class PingApp:
 
         def ping():
             creation_flags = 0
-            if os.name == 'nt': 
+            if os.name == 'nt':
                 creation_flags = subprocess.CREATE_NO_WINDOW
 
             self.proceso_ping = subprocess.Popen(
@@ -107,11 +152,14 @@ class PingApp:
                     match = re.search(r"(time|tiempo)[=<](\d+)ms", line, re.IGNORECASE)
                     if match:
                         tiempo = int(match.group(2))
-                        if tiempo < 100:
+                        if tiempo < 50:
                             self.correctos += 1
                         else:
                             self.perdidos += 1
-                    
+
+                        # 🚀 actualizar gráfico
+                        self.master.after(0, self.actualizar_grafico, tiempo)
+
             finally:
                 self.proceso_ping = None
 
@@ -123,9 +171,8 @@ class PingApp:
             hora_fin = datetime.now()
             duracion = hora_fin - self.hora_inicio
 
-
-            horas, resto = divmod(duracion.total_seconds(), 3600) 
-            minutos, segundos = divmod(resto, 60) 
+            horas, resto = divmod(duracion.total_seconds(), 3600)
+            minutos, segundos = divmod(resto, 60)
             tiempo = f"{int(horas)}h, {int(minutos)}m, {int(segundos)}s"
 
             nombre_equipo = self.nombres_equipos.get(self.ip, "Desconocido")
@@ -153,19 +200,39 @@ class PingApp:
             self.log_area.insert(tk.END, f"% < 50ms: {porcentaje_correctos:.2f}%\n")
             self.log_area.insert(tk.END, f"% >= 50ms o sin respuesta: {porcentaje_perdidos:.2f}%\n\n")
 
+            fecha_hora = datetime.now().strftime("%d%m%Y_%H%M%S")
+            nombre_archivo = os.path.join(RUTA_LOGS, f"{nombre_equipo}_{fecha_hora}.txt")
+            with open(nombre_archivo, "a", encoding="utf-8") as f:
+                f.write(f"\n==============================\n")
+                f.write(f"PING a {self.ip} - {nombre_equipo}\n")
+                f.write(f"Desde: {self.hora_inicio.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"Hasta: {hora_fin.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"Duración total: {tiempo}\n")
+                f.write("------------------------------\n")
+                f.write(self.output_text.get("1.0", tk.END))
+                f.write("\n==============================\n\n")
+
             self.results.append({
                 'ip': self.ip,
-                'nombre': self.nombres_equipos.get(self.ip, 'Desconocido'),
+                'nombre': nombre_equipo,
                 'correctos': porcentaje_correctos,
                 'perdidos': porcentaje_perdidos
             })
 
-            self.btn_detener.config(state=tk.DISABLED)
+            self.tiempos.clear()
+            self.linea.set_xdata([])
+            self.linea.set_ydata([])
+            if self.scatter:
+                self.scatter.remove()
+                self.scatter = None
+            self.ax.set_xlim(0, self.max_points)
+            self.ax.set_ylim(0, 100)
+            self.canvas_grafico.draw_idle()
 
+            self.btn_detener.config(state=tk.DISABLED)
             self.proceso_ping = None
         else:
             self.output_text.insert(tk.END, "\nNo hay un ping en curso para detener.\n")
-
 
 def limpiar_log():
     log_area.delete(1.0, tk.END) 
@@ -179,17 +246,38 @@ def calcular_promedio():
     total_perdidos = 0
     conteos = 0
 
+    # Reiniciar la lista results en base a lo que haya en log_area
+    results.clear()
+
     for line in log_text.splitlines():
         if "--- Resultados de Ping para IP:" in line:
             conteos += 1
+            ip = re.search(r"IP: ([\d.]+)", line)
+            nombre = re.search(r"\((.*?)\)", line)
+            ip_value = ip.group(1) if ip else "Desconocida"
+            nombre_value = nombre.group(1) if nombre else "Desconocido"
+
+            # Crear una entrada temporal que luego será completada
+            results.append({
+                'ip': ip_value,
+                'nombre': nombre_value,
+                'correctos': 0,
+                'perdidos': 0
+            })
+
         if "% < 50ms" in line:
             match = re.search(r"% < 50ms: (\d+.\d+)%", line)
-            if match:
-                total_correctos += float(match.group(1))
+            if match and results:
+                val = float(match.group(1))
+                total_correctos += val
+                results[-1]['correctos'] = val
+
         if "% >= 50ms o sin respuesta" in line:
             match = re.search(r"% >= 50ms o sin respuesta: (\d+.\d+)%", line)
-            if match:
-                total_perdidos += float(match.group(1))
+            if match and results:
+                val = float(match.group(1))
+                total_perdidos += val
+                results[-1]['perdidos'] = val
 
     if conteos > 0:
         promedio_correctos = total_correctos / conteos
@@ -200,6 +288,7 @@ def calcular_promedio():
     else:
         promedios_area.delete(1.0, tk.END)
         promedios_area.insert(tk.END, "No hay datos suficientes.\n")
+
 
 
 def generar_grafico():
@@ -313,7 +402,7 @@ ventana_principal.title("Gestión de Ventanas de Ping")
 
 results = []
 
-log_area = tk.Text(ventana_principal, height=10, width=70)
+log_area = tk.Text(ventana_principal, height=10, width=70, state=tk.NORMAL, undo=True)
 log_area.pack(pady=10)
 
 promedios_area = tk.Text(ventana_principal, height=5, width=70)
@@ -330,5 +419,15 @@ btn_limpiar.pack(pady=10)
 
 btn_generar_grafico = tk.Button(ventana_principal, text="Generar Gráfico de Resultados", command=generar_grafico)
 btn_generar_grafico.pack(pady=10)
+
+
+def cerrar_aplicacion():
+    # Detener cualquier ping en ejecución
+    for widget in ventana_principal.winfo_children():
+        if isinstance(widget, tk.Toplevel):  # ventanas hijas
+            widget.destroy()
+    os._exit(0)  # mata todos los procesos asociados (incluyendo pings)
+    
+ventana_principal.protocol("WM_DELETE_WINDOW", cerrar_aplicacion)
 
 ventana_principal.mainloop()
