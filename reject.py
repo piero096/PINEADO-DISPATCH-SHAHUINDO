@@ -77,7 +77,11 @@ class PingApp:
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def actualizar_grafico(self, nuevo_tiempo):
-        self.tiempos.append(nuevo_tiempo)
+        # Limitar el valor máximo mostrado a 60
+        limite_superior = 60
+        tiempo_mostrado = min(nuevo_tiempo, limite_superior)
+
+        self.tiempos.append(tiempo_mostrado)
         if len(self.tiempos) > self.max_points:
             self.tiempos.pop(0)
 
@@ -89,13 +93,18 @@ class PingApp:
 
         # Colorear puntos según valor
         colores = ['green' if t < 50 else 'red' for t in self.tiempos]
+
+        # Actualizar puntos en el gráfico
         if self.scatter:
             self.scatter.remove()
         self.scatter = self.ax.scatter(x, self.tiempos, c=colores)
 
-        # Ajustar límites dinámicos
+        # Ajustar los límites del eje X e Y
         self.ax.set_xlim(0, max(len(self.tiempos), self.max_points))
-        self.ax.set_ylim(0, max(self.tiempos) + 20 if self.tiempos else 100)
+        self.ax.set_ylim(0, limite_superior)  # siempre de 0 a 60
+
+        # Configurar ticks del eje Y de 10 en 10
+        self.ax.set_yticks(range(0, limite_superior + 10, 10))
 
         self.canvas_grafico.draw_idle()
 
