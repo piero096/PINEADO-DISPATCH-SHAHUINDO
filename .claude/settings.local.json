@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(python:*)",
+      "Bash(.venvScriptspython.exe reject.py)",
+      "Bash(\".venv/Scripts/python.exe\" reject.py)",
+      "Bash(\".venv/Scripts/python.exe\" test_expiracion.py)",
+      "Bash(pip install:*)",
+      "Bash(\".venv/Scripts/python.exe\" -m pip install openpyxl)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,70 @@
+================================================================================
+SISTEMA DE CONTROL DE LICENCIA POR TIEMPO
+================================================================================
+
+FECHA DE EXPIRACION ACTUAL: 22/11/2025 23:59:59
+
+================================================================================
+COMO FUNCIONA EL SISTEMA
+================================================================================
+
+El programa incluye un sistema de verificacion de licencia que:
+
+1. VERIFICACION DUAL:
+   - Intenta obtener la fecha actual desde Internet (WorldTimeAPI)
+   - Si falla la conexion, usa la fecha del sistema local
+   - Esto previene que se pueda burlar cambiando solo la fecha de la PC
+
+2. VALIDACION AL INICIO:
+   - Cada vez que se ejecuta el programa, verifica la licencia
+   - Si la fecha actual es mayor a la fecha de expiracion, el programa NO inicia
+   - Muestra un mensaje de error indicando que la licencia ha expirado
+
+3. ADVERTENCIAS:
+   - Si quedan 7 dias o menos, muestra una advertencia al iniciar
+   - Esto permite planificar la renovacion con anticipacion
+
+================================================================================
+COMO EXTENDER LA FECHA DE EXPIRACION
+================================================================================
+
+Para cambiar la fecha de expiracion, edite el archivo:
+   license_validator.py
+
+Busque la linea:
+   FECHA_EXPIRACION = datetime(2025, 11, 22, 23, 59, 59)
+
+Y cambie los valores:
+   datetime(AÑO, MES, DIA, HORA, MINUTO, SEGUNDO)
+
+Ejemplo para extender hasta el 31/12/2025:
+   FECHA_EXPIRACION = datetime(2025, 12, 31, 23, 59, 59)
+
+================================================================================
+ARCHIVOS DEL SISTEMA DE LICENCIA
+================================================================================
+
+1. license_validator.py
+   - Contiene la logica de validacion
+   - Define la fecha de expiracion
+   - Verifica fechas desde web y local
+
+2. reject.py
+   - Archivo principal del programa
+   - Llama a la validacion al inicio (lineas 10-14)
+
+3. test_expiracion.py
+   - Script de prueba para verificar el estado de la licencia
+   - No requiere abrir el programa completo
+   - Ejecutar con: python test_expiracion.py
+
+================================================================================
+NOTAS IMPORTANTES
+================================================================================
+
+- El sistema verifica PRIMERO la fecha de Internet
+- Solo usa la fecha local si no hay conexion a Internet
+- Una vez expirada, el programa NO se ejecutara hasta que se actualice la fecha
+- Para compilar un ejecutable (.exe), la fecha quedara embebida en el programa
+
+================================================================================
