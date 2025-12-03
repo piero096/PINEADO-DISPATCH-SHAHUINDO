@@ -5,7 +5,7 @@ import sys
 import tkinter as tk
 from tkinter import messagebox
 
-FECHA_EXPIRACION = datetime(2026, 1, 15, 23, 59, 59)
+FECHA_EXPIRACION = datetime(2026, 1, 10, 23, 59, 59)
 
 def verificar_fecha_web():
     try:
